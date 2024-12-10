@@ -15,8 +15,9 @@
 local config = require('config')
 local api = require('telegram-bot-lua.core').configure(config.bot_token)
 
--- Use config.meditations instead of the hardcoded meditations table
+-- Use config.meditations and config.affirmations
 local meditations = config.meditations
+local affirmations = config.affirmations
 
 -- Function to create the meditation list keyboard
 local function get_meditation_keyboard()
@@ -36,12 +37,33 @@ local function get_meditation_keyboard()
   return keyboard
 end
 
+-- Function to format all affirmations as a single message
+local function get_all_affirmations_text()
+  local text = "*Daily Conscious Affirmations*\n\n"
+  for _, affirmation in ipairs(affirmations) do
+    text = text .. "*" .. affirmation.category .. "*\n" .. affirmation.text .. "\n\n"
+  end
+  return text
+end
+
+-- Function to get the main options inline keyboard
+local function get_main_options_keyboard()
+  return {
+    inline_keyboard = {
+      {
+        {text = "🧘 Meditations", callback_data = "show_meditations"},
+        {text = "✨ Conscious Affirmations", callback_data = "show_affirmations"}
+      }
+    }
+  }
+end
+
 -- Handle incoming messages
 function api.on_message(message)
   if message.text == "/start" then
     api.send_message(
       message.chat.id,
-      "Welcome to Mindful Meditations! Choose a meditation to begin:",
+      "Welcome! Choose what you'd like to explore:",
       nil,
       "markdown",
       nil,
@@ -49,11 +71,7 @@ function api.on_message(message)
       nil,
       nil,
       nil,
-      {
-        keyboard = get_meditation_keyboard(),
-        resize_keyboard = true,
-        one_time_keyboard = true
-      }
+      get_main_options_keyboard()
     )
   else
     -- Check if the message matches any meditation title
@@ -85,6 +103,41 @@ function api.on_message(message)
         return
       end
     end
+  end
+end
+
+-- Handle callback queries (button presses)
+function api.on_callback_query(callback_query)
+  local data = callback_query.data
+  local chat_id = callback_query.message.chat.id
+  
+  if data == "show_meditations" then
+    api.answer_callback_query(callback_query.id)
+    api.send_message(
+      chat_id,
+      "Choose a meditation to begin:",
+      nil,
+      "markdown",
+      nil,
+      nil,
+      nil,
+      nil,
+      nil,
+      {
+        keyboard = get_meditation_keyboard(),
+        resize_keyboard = true,
+        one_time_keyboard = true
+      }
+    )
+  elseif data == "show_affirmations" then
+    api.answer_callback_query(callback_query.id)
+    -- Send all affirmations as a single formatted message
+    api.send_message(
+      chat_id,
+      get_all_affirmations_text(),
+      nil,
+      "markdown"
+    )
   end
 end
 
