@@ -73,6 +73,44 @@ function api.on_message(message)
       nil,
       get_main_options_keyboard()
     )
+  elseif message.text == "/showaffirmations" then
+    -- Send all affirmations as a single formatted message
+    api.send_message(
+      message.chat.id,
+      get_all_affirmations_text(),
+      nil,
+      "markdown"
+    )
+    -- Show the main menu again
+    api.send_message(
+      message.chat.id,
+      "Choose what you'd like to explore:",
+      nil,
+      "markdown",
+      nil,
+      nil,
+      nil,
+      nil,
+      nil,
+      get_main_options_keyboard()
+    )
+  elseif message.text == "/showmeditations" then
+    api.send_message(
+      message.chat.id,
+      "Choose a meditation to begin:",
+      nil,
+      "markdown",
+      nil,
+      nil,
+      nil,
+      nil,
+      nil,
+      {
+        keyboard = get_meditation_keyboard(),
+        resize_keyboard = true,
+        one_time_keyboard = true
+      }
+    )
   else
     -- Check if the message matches any meditation title
     for i, meditation in ipairs(meditations) do
@@ -137,6 +175,19 @@ function api.on_callback_query(callback_query)
       get_all_affirmations_text(),
       nil,
       "markdown"
+    )
+    -- Show the main menu again
+    api.send_message(
+      chat_id,
+      "Choose what you'd like to explore:",
+      nil,
+      "markdown",
+      nil,
+      nil,
+      nil,
+      nil,
+      nil,
+      get_main_options_keyboard()
     )
   end
 end
