@@ -8,6 +8,12 @@
 --     {title = "Purusha Suktam - Vedic Meditation on the Cosmic Being", file_id = ""},
 --     {title = "Nididhyasana", file_id = ""},
 --     {title = "Non-duality Experience", file_id = ""}
+--   },
+--   affirmations = {
+--     {
+--       category = "Health",
+--       text = "I am the infinite consciousness. The source of creation is within me and works for me. My body is now glowing with perfect health and wellbeing."
+--     },
 --   }
 -- }
 
