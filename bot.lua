@@ -142,19 +142,6 @@ function api.on_callback_query(callback_query)
       nil,
       meditation.title
     )
-    -- Show the meditation list again
-    api.send_message(
-      chat_id,
-      "Choose another meditation:",
-      nil,
-      "markdown",
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      get_meditation_inline_keyboard()
-    )
   end
 end
 
