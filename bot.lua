@@ -52,16 +52,38 @@ local function get_all_affirmations_text()
   return text
 end
 
--- Function to get the main options inline keyboard
+-- Function to get the main options keyboard (changed to regular keyboard)
 local function get_main_options_keyboard()
   return {
-    inline_keyboard = {
+    keyboard = {
       {
-        {text = "🧘 Meditations", callback_data = "show_meditations"},
-        {text = "✨ Conscious Affirmations", callback_data = "show_affirmations"}
+        {text = "🧘 Meditations"},
+        {text = "✨ Conscious Affirmations"}
       }
-    }
+    },
+    resize_keyboard = true
   }
+end
+
+-- Function to get meditation inline keyboard
+local function get_meditation_inline_keyboard()
+  local keyboard = {inline_keyboard = {}}
+  local current_row = {}
+  
+  for i, meditation in ipairs(meditations) do
+    table.insert(current_row, {
+      text = meditation.title,
+      callback_data = "meditation_" .. i
+    })
+    
+    -- Create a new row after every 2 items or at the end
+    if #current_row == 2 or i == #meditations then
+      table.insert(keyboard.inline_keyboard, current_row)
+      current_row = {}
+    end
+  end
+  
+  return keyboard
 end
 
 -- Handle incoming messages
@@ -79,28 +101,7 @@ function api.on_message(message)
       nil,
       get_main_options_keyboard()
     )
-  elseif message.text == "/showaffirmations" then
-    -- Send all affirmations as a single formatted message
-    api.send_message(
-      message.chat.id,
-      get_all_affirmations_text(),
-      nil,
-      "markdown"
-    )
-    -- Show the main menu again
-    api.send_message(
-      message.chat.id,
-      "Choose what you'd like to explore:",
-      nil,
-      "markdown",
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      get_main_options_keyboard()
-    )
-  elseif message.text == "/showmeditations" then
+  elseif message.text == "🧘 Meditations" then
     api.send_message(
       message.chat.id,
       "Choose a meditation to begin:",
@@ -111,42 +112,16 @@ function api.on_message(message)
       nil,
       nil,
       nil,
-      {
-        keyboard = get_meditation_keyboard(),
-        resize_keyboard = true,
-        one_time_keyboard = true
-      }
+      get_meditation_inline_keyboard()
     )
-  else
-    -- Check if the message matches any meditation title
-    for i, meditation in ipairs(meditations) do
-      if message.text == meditation.title then
-        api.send_audio(
-          message.chat.id,
-          meditation.file_id,
-          nil,
-          meditation.title
-        )
-        -- Show the meditation list keyboard again
-        api.send_message(
-          message.chat.id,
-          "Choose another meditation:",
-          nil,
-          "markdown",
-          nil,
-          nil,
-          nil,
-          nil,
-          nil,
-          {
-            keyboard = get_meditation_keyboard(),
-            resize_keyboard = true,
-            one_time_keyboard = true
-          }
-        )
-        return
-      end
-    end
+  elseif message.text == "✨ Conscious Affirmations" then
+    -- Send all affirmations as a single formatted message
+    api.send_message(
+      message.chat.id,
+      get_all_affirmations_text(),
+      nil,
+      "markdown"
+    )
   end
 end
 
@@ -155,11 +130,22 @@ function api.on_callback_query(callback_query)
   local data = callback_query.data
   local chat_id = callback_query.message.chat.id
   
-  if data == "show_meditations" then
+  -- Check if the callback is for a meditation
+  if data:match("^meditation_") then
+    local meditation_index = tonumber(data:match("meditation_(%d+)"))
+    local meditation = meditations[meditation_index]
+    
     api.answer_callback_query(callback_query.id)
+    api.send_audio(
+      chat_id,
+      meditation.file_id,
+      nil,
+      meditation.title
+    )
+    -- Show the meditation list again
     api.send_message(
       chat_id,
-      "Choose a meditation to begin:",
+      "Choose another meditation:",
       nil,
       "markdown",
       nil,
@@ -167,33 +153,7 @@ function api.on_callback_query(callback_query)
       nil,
       nil,
       nil,
-      {
-        keyboard = get_meditation_keyboard(),
-        resize_keyboard = true,
-        one_time_keyboard = true
-      }
-    )
-  elseif data == "show_affirmations" then
-    api.answer_callback_query(callback_query.id)
-    -- Send all affirmations as a single formatted message
-    api.send_message(
-      chat_id,
-      get_all_affirmations_text(),
-      nil,
-      "markdown"
-    )
-    -- Show the main menu again
-    api.send_message(
-      chat_id,
-      "Choose what you'd like to explore:",
-      nil,
-      "markdown",
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      get_main_options_keyboard()
+      get_meditation_inline_keyboard()
     )
   end
 end
