@@ -2,12 +2,12 @@
 -- return {
 --   bot_token = "<YOUR_BOT_TOKEN>",
 --   meditations = {
---     {title = "Beyond 3 Bodies", file_id = ""},
---     {title = "Conscious Visualization", file_id = ""},
---     {title = "Morning Meditation on Brahman", file_id = ""},
---     {title = "Purusha Suktam - Vedic Meditation on the Cosmic Being", file_id = ""},
---     {title = "Nididhyasana", file_id = ""},
---     {title = "Non-duality Experience", file_id = ""}
+--     {title = "Beyond 3 Bodies", file_path = "meditations/beyond_3_bodies.mp3"},
+--     {title = "Conscious Visualization", file_path = "meditations/conscious_visualization.mp3"},
+--     {title = "Morning Meditation on Brahman", file_path = "meditations/morning_meditation_brahman.mp3"},
+--     {title = "Purusha Suktam - Vedic Meditation on the Cosmic Being", file_path = "meditations/purusha_suktam.mp3"},
+--     {title = "Nididhyasana", file_path = "meditations/nididhyasana.mp3"},
+--     {title = "Non-duality Experience", file_path = "meditations/non_duality_experience.mp3"}
 --   },
 --   affirmations = {
 --     {
@@ -136,12 +136,43 @@ function api.on_callback_query(callback_query)
     local meditation = meditations[meditation_index]
     
     api.answer_callback_query(callback_query.id)
-    api.send_audio(
-      chat_id,
-      meditation.file_id,
-      nil,
-      meditation.title
-    )
+    
+    -- Check if the file exists
+    local file = io.open(meditation.file_path, "r")
+    if not file then
+      api.send_message(
+        chat_id,
+        "Sorry, the meditation file is not available at the moment.",
+        nil,
+        "markdown"
+      )
+      return
+    end
+    file:close()
+    
+    local success, result = pcall(function()
+      return api.send_audio(
+        chat_id,
+        meditation.file_path,  -- Now sending the local file path
+        nil,  -- duration
+        nil,  -- performer
+        meditation.title,  -- title
+        nil,  -- disable_notification
+        nil,  -- reply_to_message_id
+        nil,  -- reply_markup
+        meditation.title  -- caption
+      )
+    end)
+    
+    if not success then
+      print("Error sending audio:", result)
+      api.send_message(
+        chat_id,
+        "Sorry, there was an error playing this meditation. Error: " .. tostring(result),
+        nil,
+        "markdown"
+      )
+    end
   end
 end
 
