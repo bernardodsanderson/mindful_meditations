@@ -20,70 +20,25 @@
 
 local config = require('config')
 local api = require('telegram-bot-lua.core').configure(config.bot_token)
+local json = require('cjson') -- Make sure to require json
 
 -- Use config.meditations and config.affirmations
 local meditations = config.meditations
 local affirmations = config.affirmations
 
--- Function to create the meditation list keyboard
-local function get_meditation_keyboard()
-  local keyboard = {}
-  local current_row = {}
-  
-  for i, meditation in ipairs(meditations) do
-    table.insert(current_row, meditation.title)
-    
-    -- Create a new row after every 2 items or at the end
-    if #current_row == 2 or i == #meditations then
-      table.insert(keyboard, current_row)
-      current_row = {}
-    end
-  end
-  
-  return keyboard
-end
-
--- Function to format all affirmations as a single message
-local function get_all_affirmations_text()
-  local text = "*Daily Conscious Affirmations*\n\n"
-  for _, affirmation in ipairs(affirmations) do
-    text = text .. "*" .. affirmation.category .. "*\n" .. affirmation.text .. "\n\n"
-  end
-  return text
-end
-
--- Function to get the main options keyboard (changed to regular keyboard)
-local function get_main_options_keyboard()
+-- Function to get the main menu keyboard with the Mini App button
+local function get_main_menu_keyboard()
   return {
     keyboard = {
       {
-        {text = "🧘 Meditations"},
-        {text = "✨ Conscious Affirmations"}
+        {
+          text = "Open Mindful Meditations",
+          web_app = {url = config.webapp_url}
+        }
       }
     },
     resize_keyboard = true
   }
-end
-
--- Function to get meditation inline keyboard
-local function get_meditation_inline_keyboard()
-  local keyboard = {inline_keyboard = {}}
-  local current_row = {}
-  
-  for i, meditation in ipairs(meditations) do
-    table.insert(current_row, {
-      text = meditation.title,
-      callback_data = "meditation_" .. i
-    })
-    
-    -- Create a new row after every 2 items or at the end
-    if #current_row == 2 or i == #meditations then
-      table.insert(keyboard.inline_keyboard, current_row)
-      current_row = {}
-    end
-  end
-  
-  return keyboard
 end
 
 -- Handle incoming messages
@@ -91,7 +46,7 @@ function api.on_message(message)
   if message.text == "/start" then
     api.send_message(
       message.chat.id,
-      "Welcome! Choose what you'd like to explore:",
+      "Welcome to Mindful Meditations! Click the button below to open the app:",
       nil,
       "markdown",
       nil,
@@ -99,79 +54,67 @@ function api.on_message(message)
       nil,
       nil,
       nil,
-      get_main_options_keyboard()
+      get_main_menu_keyboard()
     )
-  elseif message.text == "🧘 Meditations" then
-    api.send_message(
-      message.chat.id,
-      "Choose a meditation to begin:",
-      nil,
-      "markdown",
-      nil,
-      nil,
-      nil,
-      nil,
-      nil,
-      get_meditation_inline_keyboard()
-    )
-  elseif message.text == "✨ Conscious Affirmations" then
-    -- Send all affirmations as a single formatted message
-    api.send_message(
-      message.chat.id,
-      get_all_affirmations_text(),
-      nil,
-      "markdown"
-    )
-  end
-end
-
--- Handle callback queries (button presses)
-function api.on_callback_query(callback_query)
-  local data = callback_query.data
-  local chat_id = callback_query.message.chat.id
-  
-  -- Check if the callback is for a meditation
-  if data:match("^meditation_") then
-    local meditation_index = tonumber(data:match("meditation_(%d+)"))
-    local meditation = meditations[meditation_index]
-    
-    api.answer_callback_query(callback_query.id)
-    
-    -- Check if the file exists
-    local file = io.open(meditation.file_path, "r")
-    if not file then
+  elseif message.web_app_data then
+    -- Handle web app data
+    local success, data = pcall(json.decode, message.web_app_data.data)
+    if not success then
       api.send_message(
-        chat_id,
-        "Sorry, the meditation file is not available at the moment.",
+        message.chat.id,
+        "Sorry, there was an error processing your request. Please try again.",
         nil,
         "markdown"
       )
       return
     end
-    file:close()
     
-    local success, result = pcall(function()
-      return api.send_audio(
-        chat_id,
-        meditation.file_path,  -- Now sending the local file path
-        nil,  -- duration
-        nil,  -- performer
-        meditation.title,  -- title
-        nil,  -- disable_notification
-        nil,  -- reply_to_message_id
-        nil,  -- reply_markup
-        meditation.title  -- caption
-      )
-    end)
-    
-    if not success then
-      print("Error sending audio:", result)
+    if data.action == "play_meditation" then
+      local meditation_index = data.meditation_index + 1 -- +1 because Lua arrays start at 1
+      local meditation = meditations[meditation_index]
+      
+      if not meditation then
+        api.send_message(
+          message.chat.id,
+          "Sorry, couldn't find the selected meditation. Please try another one.",
+          nil,
+          "markdown"
+        )
+        return
+      end
+
+      -- First, inform the user that we're processing their request
       api.send_message(
-        chat_id,
-        "Sorry, there was an error playing this meditation. Error: " .. tostring(result),
+        message.chat.id,
+        "🎵 Preparing your meditation: *" .. meditation.title .. "*",
         nil,
         "markdown"
       )
+      
+      -- Send the meditation audio
+      local success, result = pcall(function()
+        return api.send_audio(
+          message.chat.id,
+          meditation.file_path, -- This is now a URL
+          nil, -- duration
+          "Mindful Meditations", -- performer
+          meditation.title, -- title
+          nil, -- disable_notification
+          nil, -- reply_to_message_id
+          nil, -- reply_markup
+          "🧘‍♂️ " .. meditation.title .. "\n\nTake a moment to center yourself and find peace." -- caption
+        )
+      end)
+      
+      if not success then
+        print("Error sending audio:", result) -- Log the error
+        api.send_message(
+          message.chat.id,
+          "Sorry, there was an error playing this meditation. Please try again later.",
+          nil,
+          "markdown"
+        )
+      end
     end
   end
 end

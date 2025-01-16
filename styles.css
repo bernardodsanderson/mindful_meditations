@@ -1,0 +1,176 @@
+:root {
+    /* Use Telegram's theme variables with dark fallbacks */
+    --tg-theme-bg-color: var(--tg-theme-bg-color, #1f1f1f);
+    --tg-theme-text-color: var(--tg-theme-text-color, #ffffff);
+    --tg-theme-hint-color: var(--tg-theme-hint-color, #8c8c8c);
+    --tg-theme-button-color: var(--tg-theme-button-color, #8774e1);
+    --tg-theme-button-text-color: var(--tg-theme-button-text-color, #ffffff);
+    
+    /* Custom theme variables */
+    --card-bg-color: rgba(255, 255, 255, 0.08);
+    --card-hover-bg-color: rgba(255, 255, 255, 0.12);
+    --section-spacing: 32px;
+    --card-spacing: 16px;
+    --border-radius: 12px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: var(--tg-theme-bg-color);
+    color: var(--tg-theme-text-color);
+    padding: var(--section-spacing);
+    min-height: 100vh;
+}
+
+#main {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+/* Tabs styles */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: var(--card-spacing);
+    padding: 4px;
+    background: var(--card-bg-color);
+    border-radius: var(--border-radius);
+}
+
+.tab-button {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    background: transparent;
+    color: var(--tg-theme-text-color);
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    border-radius: calc(var(--border-radius) - 4px);
+    transition: all 0.2s ease;
+}
+
+.tab-button.active {
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+}
+
+.tab-button:not(.active):hover {
+    background: var(--card-hover-bg-color);
+}
+
+.tab-content {
+    margin-top: var(--section-spacing);
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Player styles */
+.player-container {
+    background: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    padding: var(--card-spacing);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    text-align: center;
+    margin-bottom: var(--section-spacing);
+}
+
+.player-container h3 {
+    margin-bottom: 16px;
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: var(--tg-theme-button-color);
+}
+
+#meditation-player {
+    width: 100%;
+    max-width: 500px;
+    margin: 0 auto;
+    border-radius: 24px;
+}
+
+/* Style the audio player for Webkit browsers */
+audio::-webkit-media-controls-panel {
+    background-color: var(--card-bg-color);
+}
+
+audio::-webkit-media-controls-current-time-display,
+audio::-webkit-media-controls-time-remaining-display {
+    color: var(--tg-theme-text-color);
+}
+
+/* Grid styles */
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: var(--card-spacing);
+}
+
+.meditation-card {
+    background: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    padding: var(--card-spacing);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.meditation-card:hover {
+    transform: translateY(-2px);
+    background: var(--card-hover-bg-color);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+.meditation-card h3 {
+    font-size: 1.1rem;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: var(--tg-theme-text-color);
+}
+
+.affirmation-card {
+    background: var(--card-bg-color);
+    border-radius: var(--border-radius);
+    padding: var(--card-spacing);
+    margin-bottom: var(--card-spacing);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.affirmation-card .category {
+    font-weight: 600;
+    color: var(--tg-theme-button-color);
+    margin-bottom: 8px;
+    text-transform: uppercase;
+    font-size: 0.9rem;
+    letter-spacing: 0.05em;
+}
+
+.affirmation-card .text {
+    line-height: 1.6;
+    color: var(--tg-theme-text-color);
+    font-size: 1.05rem;
+} 
